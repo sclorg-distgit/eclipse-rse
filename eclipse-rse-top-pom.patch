@@ -1,63 +1,16 @@
-diff -up ./pom.xml.orig ./pom.xml
---- ./pom.xml.orig	2014-05-18 21:19:02.000000000 -0400
-+++ ./pom.xml	2014-05-21 12:44:05.257647123 -0400
-@@ -160,17 +160,24 @@
-     <!--   <module>rse/plugins/org.eclipse.rse.useractions.sdk</module> -->
-     <module>releng/org.eclipse.tm.repo</module>
-     <module>terminal/plugins/org.eclipse.tm.terminal</module>
-+    <!--
-     <module>terminal/plugins/org.eclipse.tm.terminal.serial</module>
-     <module>terminal/plugins/org.eclipse.tm.terminal.ssh</module>
-     <module>terminal/plugins/org.eclipse.tm.terminal.telnet</module>
-+    -->
-     <module>terminal/plugins/org.eclipse.tm.terminal.view</module>
-+    <!--
-     <module>terminal/plugins/org.eclipse.tm.terminal.local</module>
--    <module>terminal/plugins/org.eclipse.tm.terminal.test</module>
-+    -->
-+    <!-- <module>terminal/plugins/org.eclipse.tm.terminal.test</module> -->
-     <module>terminal/features/org.eclipse.tm.terminal-feature</module>
-+    <!--
-     <module>terminal/features/org.eclipse.tm.terminal.serial-feature</module>
-     <module>terminal/features/org.eclipse.tm.terminal.ssh-feature</module>
-     <module>terminal/features/org.eclipse.tm.terminal.telnet-feature</module>
-+    -->
-     <module>terminal/features/org.eclipse.tm.terminal.view-feature</module>
-+    <!--
-     <module>terminal/features/org.eclipse.tm.terminal.core.sdk-feature</module>
-     <module>terminal/features/org.eclipse.tm.terminal.sdk-feature</module>
-     <module>terminal/features/org.eclipse.tm.terminal.local-feature</module>
-@@ -179,6 +186,7 @@
-     <module>wince/org.eclipse.rse.wince-feature</module>
-     <module>wince/org.eclipse.rse.subsystems.wince</module>
-     <module>wince/org.eclipse.tm.rapi</module>
-+    -->
-   </modules>
-   <build>
-     <plugins>
-@@ -304,25 +277,8 @@
-           <groupId>org.eclipse.tycho</groupId>
-           <artifactId>tycho-packaging-plugin</artifactId>
-           <version>${tycho-version}</version>
--          <dependencies>
--            <dependency>
--              <groupId>org.eclipse.tycho.extras</groupId>
--              <artifactId>tycho-buildtimestamp-jgit</artifactId>
--              <version>${tycho-version}</version>
--            </dependency>
--            <dependency>
--              <groupId>org.eclipse.tycho.extras</groupId>
--              <artifactId>tycho-sourceref-jgit</artifactId>
--              <version>${tycho-extras-version}</version>
--            </dependency>
--          </dependencies>
-           <configuration>
-             <strictBinIncludes>false</strictBinIncludes>
--            <timestampProvider>jgit</timestampProvider>
--            <jgit.ignore>pom.xml</jgit.ignore>
--            <sourceReferences>
--              <generate>true</generate>
--            </sourceReferences>
-           </configuration>
-         </plugin>
-         <plugin>
+diff --git a/pom.xml b/pom.xml
+index d090c85..813bca3 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -95,9 +95,10 @@
+         <!-- <module>rse/features/org.eclipse.rse.useractions.sdk-feature</module> -->
+ 
+         <!-- Windows CE subsystem and support for RSE -->
+-        <module>wince/org.eclipse.rse.wince-feature</module>
++      <!--  <module>wince/org.eclipse.rse.wince-feature</module>
+         <module>wince/org.eclipse.rse.subsystems.wince</module>
+         <module>wince/org.eclipse.tm.rapi</module>
++-->
+         
+         <module>releng/org.eclipse.tm.repo</module>
+     </modules>

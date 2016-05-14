@@ -1,19 +1,31 @@
-%global pkg_name eclipse-rse
-%{?scl:%scl_package %{pkg_name}}
+%{?scl:%scl_package eclipse-rse}
+%{!?scl:%global pkg_name %{name}}
+%{?java_common_find_provides_and_requires}
+
+%global baserelease 1
+
 %global rseserver_install   %{_datadir}/eclipse-rse-server
 %global rseserver_java      %{_datadir}/java/eclipse-rse-server
 %global rseserver_config    %{_sysconfdir}/sysconfig/rseserver
-%global rse_snapshot        R3_7
+%global rse_snapshot        97bd591807f0dd6a2b10ea6563d86f8ce5461917
+%global rse_commitstamp     97bd591807f0dd6a2b10ea6563d86f8ce5461917
+%global short_commit_id     97bd591
 
-%{?java_common_find_provides_and_requires}
+%if 0%{?fedora} >= 24
+%global droplets droplets
+%else
+%global droplets dropins
+%endif
+
+
 Name: %{?scl_prefix}eclipse-rse
 Summary: Eclipse Remote System Explorer
 Version: 3.7.0
-Release: 2.3.bs2%{?dist}
+Release: 7.git%{short_commit_id}.%{baserelease}%{?dist}
 License: EPL
 URL: http://www.eclipse.org/dsdp/tm/
 
-Source0: http://git.eclipse.org/c/tm/org.eclipse.tm.git/snapshot/%{rse_snapshot}.tar.bz2
+Source0: http://git.eclipse.org/c/tm/org.eclipse.tm.git/snapshot/org.eclipse.tm-%{rse_commitstamp}.tar.bz2
 
 # Use Authen::pam to authenticate clients
 Patch1: eclipse-rse-server-auth-pl.patch
@@ -24,6 +36,8 @@ Patch2: eclipse-rse-server-scripts.patch
 Patch3: eclipse-rse-top-pom.patch
 # Patch to remove dependency on org.apache.commons.net.source
 Patch4: eclipse-rse-commons-net-source.patch
+# Patch jgit version issue
+Patch6: eclipse-rse-jgit-version.patch
 
 BuildArch: noarch
 
@@ -32,8 +46,10 @@ BuildRequires: %{?scl_prefix}tycho-extras
 BuildRequires: %{?scl_prefix}eclipse-license
 BuildRequires: %{?scl_prefix}eclipse-pde >= 1:3.8.0-0.21
 BuildRequires: %{?scl_prefix_java_common}apache-commons-net
+BuildRequires: %{?scl_prefix}eclipse-tm-terminal
 Requires: %{?scl_prefix}eclipse-platform >= 1:3.8.0-0.21
 Requires: %{?scl_prefix_java_common}apache-commons-net
+Requires: %{?scl_prefix}eclipse-tm-terminal
 
 %description
 Remote System Explorer (RSE) is a framework and toolkit in Eclipse Workbench
@@ -43,24 +59,24 @@ that allows you to connect and work with a variety of remote systems.
 Summary: Eclipse Remote System Explorer Server
 Requires: perl
 Requires: %{?scl_prefix}perl-Authen-PAM
-Requires: java-1.7.0-openjdk
+Requires: java-1.8.0-openjdk
 
 %description server
 The Remote System Explorer (RSE) framework server that can be used so clients can connect to this machine via RSE.
 
 %prep
-
 %{?scl:scl enable %{scl_maven} %{scl} - << "EOF"}
-%setup -q -n %{rse_snapshot}
+%setup -q -n org.eclipse.tm-%{rse_snapshot}
 
-%patch3 -b .orig
+%patch3 -p1
+%patch6 -p1
 %patch4
 
 pushd rse/plugins/org.eclipse.rse.services.dstore
 %patch1
 %patch2
 popd
-sed -i -e 's|3.2,3.3|3.2,3.9|g' pom.xml
+sed -i -e 's|3.2,3.3|3.2,3.9|g' admin/pom-config.xml
 
 # Not necessary build the p2 repo with mvn_install
 %pom_disable_module releng/org.eclipse.tm.repo
@@ -68,17 +84,17 @@ sed -i -e 's|3.2,3.3|3.2,3.9|g' pom.xml
 # Fix pom versions
 sed -i -e 's@\.qualifier</version>@-SNAPSHOT</version>@' $(find -name pom.xml)
 
+%mvn_package "::pom::" __noinstall
 %{?scl:EOF}
+
 
 %build
-
 %{?scl:scl enable %{scl_maven} %{scl} - << "EOF"}
 %mvn_build -j
-
 %{?scl:EOF}
 
-%install
 
+%install
 %{?scl:scl enable %{scl_maven} %{scl} - << "EOF"}
 %mvn_install
 
@@ -86,7 +102,7 @@ install -d -m 755 %{buildroot}%{rseserver_install}
 install -d -m 755 %{buildroot}%{rseserver_java}
 install -d -m 755 %{buildroot}%{rseserver_config}
 
-pushd %{buildroot}%{_datadir}/eclipse/dropins/rse/eclipse/plugins
+pushd %{buildroot}%{_datadir}/eclipse/%{droplets}/rse/eclipse/plugins
 unzip -q -o -d %{buildroot}%{rseserver_java} org.eclipse.rse.services.dstore_*.jar dstore_miners.jar
 unzip -q -o -d %{buildroot}%{rseserver_java} org.eclipse.dstore.core_*.jar dstore_core.jar
 unzip -q -o -d %{buildroot}%{rseserver_java} org.eclipse.dstore.extra_*.jar dstore_extra_server.jar
@@ -110,8 +126,8 @@ pushd serverruntime/data
 cp *.properties %{buildroot}%{rseserver_config}
 cp *.dat %{buildroot}%{rseserver_install}
 popd
-
 %{?scl:EOF}
+
 
 %files -f .mfiles
 %doc releng/rootfiles/*.html
@@ -125,14 +141,23 @@ popd
 %doc releng/rootfiles/*.html
 
 %changelog
-* Mon Jul 13 2015 Mat Booth <mat.booth@redhat.com> - 3.7.0-2.3
-- Fix require on perl-Authen-PAM
+* Thu Feb 04 2016 Mat Booth <mat.booth@redhat.com> - 3.7.0-7.git97bd591.1
+- Import latest from Fedora
 
-* Mon Jul 13 2015 Mat Booth <mat.booth@redhat.com> - 3.7.0-2.2
-- Fix broken requires on server package
+* Wed Feb 03 2016 Fedora Release Engineering <releng@fedoraproject.org> - 3.7.0-7.git97bd591
+- Rebuilt for https://fedoraproject.org/wiki/Fedora_24_Mass_Rebuild
 
-* Mon Jul 06 2015 Roland Grunberg <rgrunber@redhat.com> - 3.7.0-2.1
-- SCL-ize.
+* Mon Nov 30 2015 Mikolaj Izdebski <mizdebsk@redhat.com> - 3.7.0-6.git97bd591
+- Rebuild for apache-commons-net 3.4 update
+
+* Tue Oct 06 2015 Sopot Cela <scela@redhat.com> - 3.7.0-5.git%{short_commit_id}
+- Upgrade for Mars.1 release
+
+* Mon Sep 14 2015 Roland Grunberg <rgrunber@redhat.com> - 3.7.0-4
+- Rebuild as an Eclipse p2 Droplet.
+
+* Mon Aug 31 2015 Roland Grunberg <rgrunber@redhat.com> - 3.7.0-3
+- Minor change to build as a droplet.
 
 * Wed Jun 17 2015 Fedora Release Engineering <rel-eng@lists.fedoraproject.org> - 3.7.0-2
 - Rebuilt for https://fedoraproject.org/wiki/Fedora_23_Mass_Rebuild

@@ -1,0 +1,16 @@
+diff --git a/pom.xml b/pom.xml
+index d090c85..813bca3 100644
+--- a/pom.xml
++++ b/pom.xml
+@@ -95,9 +95,10 @@
+         <!-- <module>rse/features/org.eclipse.rse.useractions.sdk-feature</module> -->
+ 
+         <!-- Windows CE subsystem and support for RSE -->
+-        <module>wince/org.eclipse.rse.wince-feature</module>
++      <!--  <module>wince/org.eclipse.rse.wince-feature</module>
+         <module>wince/org.eclipse.rse.subsystems.wince</module>
+         <module>wince/org.eclipse.tm.rapi</module>
++-->
+         
+         <module>releng/org.eclipse.tm.repo</module>
+     </modules>

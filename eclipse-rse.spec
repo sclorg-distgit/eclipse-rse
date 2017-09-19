@@ -2,34 +2,28 @@
 %{!?scl:%global pkg_name %{name}}
 %{?java_common_find_provides_and_requires}
 
-%global baserelease 2
+%global baserelease 1
 
 %global rseserver_install   %{_datadir}/eclipse-rse-server
 %global rseserver_java      %{_datadir}/java/eclipse-rse-server
 %global rseserver_config    %{_sysconfdir}/sysconfig/rseserver
-%global rse_snapshot        671d63b214f73844d6941751e64e5bacfdd2e35f
-%global rse_commitstamp     671d63b214f73844d6941751e64e5bacfdd2e35f
-%global short_commit_id     671d63b
-
-%global droplets droplets
-
+%global rse_snapshot        fc91c569270faae6050d62c4ba6d5d49da5ad9b9
+%global rse_commitstamp     fc91c569270faae6050d62c4ba6d5d49da5ad9b9
 
 Name: %{?scl_prefix}eclipse-rse
 Summary: Eclipse Remote System Explorer
-Version: 3.7.1
-Release: 0.1.git%{short_commit_id}.%{baserelease}%{?dist}
+Version: 3.7.2
+Release: 1.%{baserelease}%{?dist}
 License: EPL
 URL: http://www.eclipse.org/dsdp/tm/
 
-Source0: http://git.eclipse.org/c/tm/org.eclipse.tm.git/snapshot/org.eclipse.tm-%{rse_commitstamp}.tar.gz
+Source0: http://git.eclipse.org/c/tm/org.eclipse.tm.git/snapshot/org.eclipse.tm-%{rse_commitstamp}.tar.xz
 
 # Use Authen::pam to authenticate clients
 Patch1: eclipse-rse-server-auth-pl.patch
 # Fix classpath in daemon and server scripts to point
 # to install locations
 Patch2: eclipse-rse-server-scripts.patch
-# Patch to remove dependency on jgit for tycho-packaging-plugin
-Patch3: eclipse-rse-top-pom.patch
 # Patch to remove dependency on org.apache.commons.net.source
 Patch4: eclipse-rse-commons-net-source.patch
 # Patch jgit version issue
@@ -65,7 +59,6 @@ The Remote System Explorer (RSE) framework server that can be used so clients ca
 set -e -x
 %setup -q -n org.eclipse.tm-%{rse_snapshot}
 
-%patch3 -p1
 %patch6 -p1
 %patch4
 
@@ -77,6 +70,17 @@ sed -i -e 's|3.2,3.3|3.2,3.9|g' admin/pom-config.xml
 
 # Not necessary build the p2 repo with mvn_install
 %pom_disable_module releng/org.eclipse.tm.repo
+
+# Disable modules we don't want to ship
+%pom_disable_module rse/plugins/org.eclipse.rse.ui.capabilities
+%pom_disable_module wince/org.eclipse.rse.wince-feature
+%pom_disable_module wince/org.eclipse.rse.subsystems.wince
+%pom_disable_module wince/org.eclipse.tm.rapi
+
+# Don't ship SDK bundles
+%mvn_package "::pom::" __noinstall
+%mvn_package ":org.eclipse.rse.sdk" __noinstall
+%mvn_package ":*.doc.isv" __noinstall
 
 # Fix pom versions
 sed -i -e 's@\.qualifier</version>@-SNAPSHOT</version>@' $(find -name pom.xml)
@@ -99,7 +103,7 @@ install -d -m 755 %{buildroot}%{rseserver_install}
 install -d -m 755 %{buildroot}%{rseserver_java}
 install -d -m 755 %{buildroot}%{rseserver_config}
 
-pushd %{buildroot}%{_datadir}/eclipse/%{droplets}/rse/eclipse/plugins
+pushd %{buildroot}%{_datadir}/eclipse/droplets/rse/eclipse/plugins
 unzip -q -o -d %{buildroot}%{rseserver_java} org.eclipse.rse.services.dstore_*.jar dstore_miners.jar
 unzip -q -o -d %{buildroot}%{rseserver_java} org.eclipse.dstore.core_*.jar dstore_core.jar
 unzip -q -o -d %{buildroot}%{rseserver_java} org.eclipse.dstore.extra_*.jar dstore_extra_server.jar
@@ -138,11 +142,21 @@ popd
 %doc releng/rootfiles/*.html
 
 %changelog
-* Fri Jul 29 2016 Mat Booth <mat.booth@redhat.com> - 3.7.1-0.1.git671d63b.2
-- Always use droplets location
-
-* Fri Jul 29 2016 Mat Booth <mat.booth@redhat.com> - 3.7.1-0.1.git671d63b.1
+* Mon Jan 30 2017 Mat Booth <mat.booth@redhat.com> - 3.7.2-1.1
 - Auto SCL-ise package for rh-eclipse46 collection
+
+* Mon Jan 30 2017 Mat Booth <mat.booth@redhat.com> - 3.7.2-1
+- Update to latest upstream build
+- Don't ship SDK bundles with main package
+
+* Tue Oct 11 2016 Mat Booth <mat.booth@redhat.com> - 3.7.1-1.1
+- Auto SCL-ise package for rh-eclipse46 collection
+
+* Tue Oct 04 2016 Mat Booth <mat.booth@redhat.com> - 3.7.1-1
+- Update to released version of 3.7.1
+
+* Thu May  5 2016 Mikolaj Izdebski <mizdebsk@redhat.com> - 3.7.1-0.2.git671d63b
+- Rebuild for apache-commons-net 3.5
 
 * Thu Mar 03 2016 Sopot Cela <scela@redhat.com> - 3.7.1-0.1.git671d63b
 - Upgrade for Mars.2 release
